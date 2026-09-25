@@ -1,0 +1,11 @@
+{
+  "asr": {
+    "provider": "mock",
+    "script": [
+      "Tell me about yourself.",
+      "How would you design a URL shortener?",
+      "Tell me about a time you showed leadership.",
+      "Could you repeat that please?"
+    ]
+  }
+}

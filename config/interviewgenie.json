@@ -1,0 +1,86 @@
+{
+  "system": {
+    "name": "InterviewGenie",
+    "log_level": "INFO",
+    "log_format": "auto",
+    "seed": 20260925
+  },
+  "asr": {
+    "provider": "local",
+    "sample_rate": 16000,
+    "chunk_ms": 320,
+    "language": "en-US",
+    "min_confidence": 0.45,
+    "silence_timeout_ms": 900,
+    "partial_interval_ms": 240,
+    "noise_suppression": true,
+    "denoise_strength": 0.75,
+    "vad": {
+      "energy_threshold": 0.006,
+      "adaptive_factor": 2.6,
+      "zcr_max": 0.35,
+      "hangover_ms": 260,
+      "min_speech_ms": 180,
+      "min_silence_ms": 320
+    },
+    "model_path": "",
+    "credentials": {}
+  },
+  "nlp": {
+    "tagger_backend": "builtin",
+    "use_coref": true,
+    "intent_alpha": 0.22,
+    "keyword_count": 12
+  },
+  "knowledge": {
+    "backend": "memory",
+    "seed_file": "",
+    "persist_path": "data/knowledge_graph_snapshot.json",
+    "max_hops": 2,
+    "max_evidence": 8,
+    "endpoint": "",
+    "graph": "interviewgenie"
+  },
+  "context": {
+    "max_turns": 40,
+    "empathy_level": 0.7,
+    "topic_decay": 0.85
+  },
+  "generation": {
+    "backend": "composer",
+    "max_words": 90,
+    "min_words": 12,
+    "llm": {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "endpoint": "",
+      "api_key": "",
+      "temperature": 0.4,
+      "max_tokens": 220
+    }
+  },
+  "personalization": {
+    "profile_path": "data/candidate_profile.json",
+    "learning_rate": 0.25
+  },
+  "learning": {
+    "window": 50,
+    "auto_consolidate": false
+  },
+  "evaluation": {
+    "dataset": "config/benchmark_cases.json",
+    "weights": {
+      "accuracy": 0.25,
+      "relevance": 0.25,
+      "engagement": 0.15,
+      "personalization": 0.10,
+      "groundedness": 0.15,
+      "fluency": 0.10
+    }
+  },
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8420,
+    "web_root": "web"
+  }
+}

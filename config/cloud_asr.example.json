@@ -1,0 +1,9 @@
+{
+  "asr": {
+    "provider": "google",
+    "language": "en-US",
+    "credentials": {
+      "service_account_file": "/path/to/service-account.json"
+    }
+  }
+}

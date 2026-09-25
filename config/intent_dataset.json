@@ -1,0 +1,1782 @@
+{
+  "version": 4,
+  "description": "Labelled interviewer utterances. Each example carries a coarse `intent` (what kind of answer is required) and a fine `topic` (subject matter). Two classifiers are trained from this file; it doubles as the intent benchmark.",
+  "classes": {
+    "self_introduction": "Requests to summarise the candidate's background and career story.",
+    "past_experience": "Requests for a concrete past experience; answered with a STAR story.",
+    "self_assessment": "Requests for the candidate's strengths or weaknesses.",
+    "people": "Questions about conflict, collaboration, mentoring and leadership.",
+    "hypothetical": "Hypothetical 'what would you do if' questions.",
+    "knowledge": "Requests to explain a technical concept or compare approaches.",
+    "design": "Requests to architect or scale a system.",
+    "coding": "Requests to write, complete or read code.",
+    "troubleshooting": "Questions about why a system or piece of code misbehaves.",
+    "background": "Questions about hands-on experience, education or self-directed learning.",
+    "motivation": "Questions about why the candidate wants this role or company.",
+    "goals": "Questions about long term career direction.",
+    "culture": "Questions about values, work style and environment preferences.",
+    "measurement": "Questions about metrics, success criteria or impact.",
+    "logistics": "Salary, equity, notice period, availability and interview logistics.",
+    "meta": "Clarification, closing and rapport-building turns."
+  },
+  "topics": {
+    "technical_concept": "Languages, frameworks, data structures and theory.",
+    "architecture": "System design, scaling and distributed systems.",
+    "algorithms": "Coding and algorithmic problem solving.",
+    "reliability": "Debugging, incidents, performance and operations.",
+    "delivery": "Shipping projects and owning outcomes.",
+    "collaboration": "Working with peers, stakeholders and cross-functional partners.",
+    "leadership": "Leading, mentoring and driving direction.",
+    "judgement": "Trade-off reasoning and hypothetical decision making.",
+    "learning": "Education, courses and self-directed skill building.",
+    "self": "The candidate's own strengths, weaknesses and story.",
+    "company": "The employer, its product and the candidate's motivation.",
+    "career": "Long term career direction and ambitions.",
+    "culture": "Work style, values and environment preferences.",
+    "measurement": "Metrics, KPIs and impact quantification.",
+    "logistics": "Compensation, availability and process.",
+    "meta": "Conversation management."
+  },
+  "examples": [
+    {
+      "text": "Tell me about yourself",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Walk me through your resume",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Give me a quick overview of your background",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "How would you introduce yourself to the team",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Start off by telling me a little bit about your experience",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "I would love to hear more about your journey into engineering",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Give me the two minute version of your career so far",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Summarise your background for me",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "How did you end up in this field",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Take me through your CV",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "What has your career path looked like up to now",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Before we dive in, tell me a bit about who you are",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Give me a sense of your professional background",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Tell me your story",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "What should I know about you before we start",
+      "intent": "self_introduction",
+      "topic": "self",
+      "fine": "opening"
+    },
+    {
+      "text": "Tell me about a time when you had to deal with a difficult colleague",
+      "intent": "people",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a situation where you disagreed with your manager",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Give me an example of when you showed leadership",
+      "intent": "people",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a project you are particularly proud of",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a time you failed and what you learned from it",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you had to meet a tight deadline",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Walk me through a time you had to influence without authority",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you received critical feedback",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a challenging bug you had to debug",
+      "intent": "troubleshooting",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Give me an example of a time you prioritised under pressure",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you improved a process",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you had to make a decision with incomplete information",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a time you had to learn something completely new on the job",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you went above and beyond for a customer",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Give me an example of when you changed your mind mid project",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you had to deliver bad news",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a situation where you had to cut scope",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about the hardest technical problem you have solved",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Walk me through a time you mentored someone",
+      "intent": "people",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you were wrong about something important",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Describe a time you had to work with a very unclear requirement",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "Tell me about a time you had to say no to a stakeholder",
+      "intent": "past_experience",
+      "topic": "delivery",
+      "fine": "behavioral"
+    },
+    {
+      "text": "What is the difference between a process and a thread",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain how a hash map works internally",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between TCP and UDP",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain what eventual consistency means",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What are the ACID properties of a database",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "How does garbage collection work in the JVM",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between a list and a tuple in python",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain the CAP theorem in your own words",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is an index in a relational database",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between authentication and authorisation",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "How does HTTPS keep traffic private",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is a closure in javascript",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain the difference between latency and throughput",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between optimistic and pessimistic locking",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What happens when you type a URL into the browser",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain the difference between a mutex and a semaphore",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is a deadlock and how do you prevent one",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "How does a B-tree index work",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between correlation and causation",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain what a promise is in javascript",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between a compiler and an interpreter",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "How does public key encryption work",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between overloading and overriding",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "Explain the difference between a left join and an inner join",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "What is the difference between TCP backpressure and flow control",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "technical"
+    },
+    {
+      "text": "How would you design a URL shortener",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design a rate limiter for a public API",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you architect a news feed for a hundred million users",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design a distributed cache",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design a chat system like slack",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design a metrics ingestion pipeline",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design a payment service that never loses transactions",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Walk me through the architecture of a video streaming service",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you scale a monolithic web application",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design the data model for a ride sharing app",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design a search autocomplete service",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design a notification system that supports email and push",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design a file storage service like dropbox",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design an online ticket booking system",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design a system to count page views at scale",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design a job scheduler that runs millions of tasks a day",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you architect a multi tenant SaaS platform",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Design the storage layer for an analytics product",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "How would you design an API gateway",
+      "intent": "design",
+      "topic": "architecture",
+      "fine": "system_design"
+    },
+    {
+      "text": "Write a function that reverses a linked list",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement a function to detect a cycle in a graph",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Code up a binary search on a sorted array",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write a SQL query to find duplicate emails",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement an LRU cache",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write a function that merges two sorted lists",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement a stack using two queues",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write code to check whether a string is a palindrome",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement depth first search on a binary tree",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write a function that returns the nth fibonacci number",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Code a solution for the two sum problem",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement a rate limiter in python",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write a function to flatten a nested dictionary",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Implement a simple thread safe queue",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Write a function that groups anagrams together",
+      "intent": "coding",
+      "topic": "algorithms",
+      "fine": "coding"
+    },
+    {
+      "text": "Why is this query so slow",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "This service is returning 500 errors, how would you debug it",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "The deployment is failing, how do you troubleshoot it",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "Our latency spiked overnight, how would you investigate",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "The tests are flaky, what do you do",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "How would you debug a memory leak in production",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "Users report intermittent failures, where do you start",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "The API works locally but fails in staging, how do you find out why",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "How do you debug a race condition",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "Our error rate jumped after a release, what is your process",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "The database connections are exhausted, how do you diagnose it",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "How would you troubleshoot a slow CI pipeline",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "The service is fine but the dashboard shows no data, what do you check",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "How do you approach a bug you cannot reproduce",
+      "intent": "troubleshooting",
+      "topic": "reliability",
+      "fine": "debugging"
+    },
+    {
+      "text": "What experience do you have with Kubernetes",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "How much experience do you have with distributed systems",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Have you worked with Kafka before",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "What is your experience leading a team of engineers",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Tell me about your experience with machine learning in production",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "How long have you been working with python",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "What is your background with cloud infrastructure",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Have you ever owned a service end to end",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "How much of your work has been front end versus back end",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "What exposure have you had to high traffic systems",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Have you worked in a regulated industry before",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "What is your experience with on call rotations",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "How much experience do you have hiring engineers",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Have you built anything used by external customers",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "What experience do you have with data pipelines",
+      "intent": "background",
+      "topic": "technical_concept",
+      "fine": "experience"
+    },
+    {
+      "text": "Why do you want to work here",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why are you interested in this role",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why do you want to leave your current job",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What excites you about this team",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why did you apply to our company specifically",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What would make you join us over other offers",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why this role and not a similar one at another company",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What drew you to our product",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why are you looking to move on right now",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What is it about this position that appeals to you",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "Why should we hire you",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What made you reach out to us",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "How did you hear about the role and why did it catch your eye",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What do you hope to get out of this job",
+      "intent": "motivation",
+      "topic": "company",
+      "fine": "motivation"
+    },
+    {
+      "text": "What is your greatest strength",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What are you best at professionally",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What would your previous manager say you are great at",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What do you bring that other candidates do not",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What are your superpowers",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "Which of your skills would help this team the most",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What do you consider your strongest technical area",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What are you known for among your colleagues",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "Where do you add the most value on a team",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What is the thing you do better than almost anyone else",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What would your teammates say is your biggest asset",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "strength"
+    },
+    {
+      "text": "What is your biggest weakness",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "Tell me about a mistake you made at work",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What is an area you know you need to improve",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "Describe a project that did not go well",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What feedback have you received that was hard to hear",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "Where do you struggle the most",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What is something you are not good at yet",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "Tell me about a time you dropped the ball",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What would you do differently if you could redo your last project",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What part of the job do you find hardest",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What skill are you currently working on improving",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "What has been your biggest professional regret",
+      "intent": "self_assessment",
+      "topic": "self",
+      "fine": "weakness"
+    },
+    {
+      "text": "How do you handle conflict with a coworker",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "Tell me about a time you disagreed with a teammate",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "What do you do when someone on your team is not pulling their weight",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "Describe a time you pushed back on a product decision",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "How do you deal with a difficult stakeholder",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "What happens when you and a peer cannot agree on an approach",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "How do you handle it when someone takes credit for your work",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "Tell me about a time you had to escalate a disagreement",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "How do you work with people who are rude or dismissive",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "What do you do when a senior engineer rejects your design",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "conflict"
+    },
+    {
+      "text": "How do you work with other teams",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "Describe your ideal working relationship with a product manager",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "How do you collaborate with designers and PMs",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "Tell me about a time you helped a struggling teammate",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "How do you share knowledge with the rest of the team",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "What role do you usually play on a team",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "How do you make sure everyone is aligned before you start",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "Tell me about a successful cross functional project",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "How do you handle code review disagreements",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "How do you build trust with a new team",
+      "intent": "people",
+      "topic": "collaboration",
+      "fine": "teamwork"
+    },
+    {
+      "text": "Tell me about a time you led a project",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "How do you mentor junior engineers",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "Describe a time you took ownership of something outside your remit",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "How do you motivate a team during a crunch",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "How do you drive a decision when nobody agrees",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "Tell me about a time you set technical direction",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "How do you help a team recover after a bad incident",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "Describe how you have grown other engineers",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "How do you decide what to delegate",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "Tell me about a time you led through a major change",
+      "intent": "people",
+      "topic": "leadership",
+      "fine": "leadership"
+    },
+    {
+      "text": "Where do you see yourself in five years",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What are your long term career goals",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "Do you eventually want to move into management",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What is the next step you want in your career",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "Where do you want your career to be in three years",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What kind of role are you aiming for long term",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "Do you plan to stay on the individual contributor track",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What does career success look like for you",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What are you hoping to achieve in your next role",
+      "intent": "goals",
+      "topic": "career",
+      "fine": "career_goal"
+    },
+    {
+      "text": "What kind of work environment do you thrive in",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "How do you like to receive feedback",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What does a good team culture look like to you",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "How do you handle ambiguity",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What are your core values at work",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "How do you prefer to work, remotely or in an office",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What makes a workplace feel psychologically safe to you",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "How do you recharge after a hard week",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What kind of manager do you work best with",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What does work life balance mean to you",
+      "intent": "culture",
+      "topic": "culture",
+      "fine": "culture_fit"
+    },
+    {
+      "text": "What would you do if you realised a deadline was impossible",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if you disagreed with a decision that was already made",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "If you joined and inherited a codebase with no tests, what would you do",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if two stakeholders wanted opposite things",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if you found a security vulnerability in production",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "If you had to choose between shipping on time and shipping quality, what do you do",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if your manager gave you conflicting priorities",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if a customer demanded a feature that breaks the architecture",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "Suppose you join and the documentation is wrong, how do you handle it",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "What would you do if you were asked to do something unethical",
+      "intent": "hypothetical",
+      "topic": "judgement",
+      "fine": "situational"
+    },
+    {
+      "text": "How would you measure the success of a new feature",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What metrics would you track for a search service",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "How do you know when a migration is done",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What would you use to measure reliability",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What KPIs matter for this team",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "How would you quantify the impact of your last project",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What does good look like for this role after ninety days",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "How do you decide whether an experiment worked",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What data would you look at to justify a rewrite",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "How do you measure code quality",
+      "intent": "measurement",
+      "topic": "measurement",
+      "fine": "metrics"
+    },
+    {
+      "text": "What are the tradeoffs between microservices and a monolith",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "Should we use SQL or NoSQL here, what do you think",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "What are the tradeoffs of shipping fast versus being thorough",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "Compare REST and GraphQL for this use case",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "Would you rather use a queue or a synchronous call here",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "What are the pros and cons of a serverless architecture",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "How would you choose between a relational and a document store",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "Is it better to build or buy in this situation",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "When would you not use microservices",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "Compare a monorepo and multiple repositories for a growing team",
+      "intent": "knowledge",
+      "topic": "technical_concept",
+      "fine": "tradeoff"
+    },
+    {
+      "text": "What are your salary expectations",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "What is your current compensation",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "How much notice period do you have to give",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "When could you start",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "Are you open to relocation",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "What are you looking for in terms of equity",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "Do you require visa sponsorship",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "How flexible are you on the base salary",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "What is your availability for the next round",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "Are you interviewing elsewhere right now",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "What would make you sign an offer",
+      "intent": "logistics",
+      "topic": "logistics",
+      "fine": "compensation"
+    },
+    {
+      "text": "What is your educational background",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "Why did you choose your major",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "How do you keep your skills up to date",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "Have you taken any relevant courses or certifications",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "Did you finish your degree",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "What did you study and why",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "How do you learn new technologies",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "What was your favourite course and why",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "Do you have any formal training in machine learning",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "What was the last thing you taught yourself",
+      "intent": "background",
+      "topic": "learning",
+      "fine": "education"
+    },
+    {
+      "text": "Do you have any questions for us",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "What questions do you have for me",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "Is there anything else you would like to add",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "That is all from me, thanks for your time",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "Anything you want to highlight before we wrap up",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "Do you have any last questions about the team",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "Is there anything I have not asked that I should have",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "We are out of time, any final thoughts",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "What would you like to know about the role",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "closing"
+    },
+    {
+      "text": "Could you repeat that please",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Sorry, I did not quite catch that, can you say it again",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Can you clarify what you mean by that",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "I want to make sure I understood, you mean the second project",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Which project are you referring to exactly",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Sorry, the audio cut out, what did you say",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Do you mean the migration or the rewrite",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "Can you be more specific about the timeline",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "I missed the last part, could you go back",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "When you say the team, which team do you mean",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "clarification"
+    },
+    {
+      "text": "How is your day going so far",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Did you find the office okay",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Are you comfortable, do you need a break or some water",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Nice weather we are having, are you local",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "How was your commute",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Before we start, how are you doing today",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Any fun plans for the weekend",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "I see you are based nearby, do you like the area",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    },
+    {
+      "text": "Hope the connection is working okay on your side",
+      "intent": "meta",
+      "topic": "meta",
+      "fine": "smalltalk"
+    }
+  ]
+}

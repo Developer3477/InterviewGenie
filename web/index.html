@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InterviewGenie — Live Cockpit</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧞</text></svg>">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">🧞</span>
+    <div>
+      <h1>InterviewGenie</h1>
+      <p class="tagline">real-time interview copilot</p>
+    </div>
+  </div>
+  <div class="status">
+    <span id="conn" class="pill pill-off">disconnected</span>
+    <span id="phase" class="pill">idle</span>
+    <span id="latency" class="pill pill-muted">–</span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ---------------------------------------------------------------- -->
+  <section class="col col-left">
+    <div class="card">
+      <h2>1 · Candidate profile</h2>
+      <div class="grid2">
+        <label>Name <input id="p-name" value="Priya"></label>
+        <label>Target role <input id="p-role" value="Senior Software Engineer"></label>
+        <label>Target company <input id="p-company" value="Stripe"></label>
+        <label>Years experience <input id="p-years" type="number" value="6"></label>
+      </div>
+      <label>Skills (comma separated)
+        <input id="p-skills" value="Python, PostgreSQL, Kubernetes, Kafka, Redis"></label>
+      <label>Strengths
+        <input id="p-strengths" value="debugging distributed systems, mentoring engineers"></label>
+      <button id="btn-start" class="btn btn-primary">Start session</button>
+    </div>
+
+    <div class="card">
+      <h2>2 · Ask a question</h2>
+      <textarea id="question" rows="3"
+        placeholder="Type or dictate the interviewer's question…">Tell me about a time you showed leadership.</textarea>
+      <div class="row">
+        <button id="btn-ask" class="btn btn-primary">Answer this</button>
+        <button id="btn-random" class="btn">Surprise me</button>
+      </div>
+      <p class="hint">Shortcuts: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to answer.</p>
+    </div>
+
+    <div class="card">
+      <h2>3 · Feedback &amp; learning</h2>
+      <div class="row wrap">
+        <button class="btn btn-good" data-accept="1">✓ Use it</button>
+        <button class="btn" data-accept="edited">✎ Edit</button>
+        <button class="btn btn-bad" data-accept="rejected">✕ Reject</button>
+      </div>
+      <div class="row">
+        <input id="feedback" placeholder="e.g. too long, more numbers, too formal">
+        <button id="btn-feedback" class="btn">Send</button>
+      </div>
+      <div id="learning" class="mini"></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- -->
+  <section class="col col-mid">
+    <div class="card card-hero">
+      <h2>Suggested answer</h2>
+      <div id="answer" class="answer">
+        <p class="placeholder">Start a session and ask a question. The answer appears here,
+        grounded in the knowledge graph and the candidate's own story bank.</p>
+      </div>
+      <div id="scorecard" class="scorecard"></div>
+    </div>
+
+    <div class="card">
+      <h2>Interviewer understanding</h2>
+      <div class="grid3">
+        <div class="stat"><span class="k">Intent</span><span id="m-intent" class="v">–</span></div>
+        <div class="stat"><span class="k">Topic</span><span id="m-topic" class="v">–</span></div>
+        <div class="stat"><span class="k">Confidence</span><span id="m-conf" class="v">–</span></div>
+        <div class="stat"><span class="k">Emotion</span><span id="m-emotion" class="v">–</span></div>
+        <div class="stat"><span class="k">Sentiment</span><span id="m-sentiment" class="v">–</span></div>
+        <div class="stat"><span class="k">Rapport</span><span id="m-rapport" class="v">–</span></div>
+      </div>
+      <div id="entities" class="chips"></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- -->
+  <section class="col col-right">
+    <div class="card">
+      <h2>Knowledge evidence</h2>
+      <div id="evidence" class="evidence"><p class="placeholder">No evidence yet.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Live speech</h2>
+      <button id="btn-mic" class="btn btn-mic">🎙 Start microphone</button>
+      <div id="partial" class="partial">interim hypotheses stream here</div>
+      <p class="hint">Uses the browser's speech recognition when available. Audio chunks are
+      also analysed server-side by the noise-suppressing VAD.</p>
+    </div>
+
+    <div class="card">
+      <h2>System</h2>
+      <div id="system" class="mini">–</div>
+      <div class="row">
+        <button id="btn-report" class="btn">Session report</button>
+        <button id="btn-bench" class="btn">Run benchmark</button>
+      </div>
+      <pre id="report" class="report"></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>InterviewGenie · stdlib-only · <span id="footer-stats">–</span></span>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
