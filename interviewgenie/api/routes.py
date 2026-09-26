@@ -169,8 +169,10 @@ class Router:
         # static + cockpit
         if method == "GET" and route in {"/", "/index.html"}:
             return self._static("index.html")
+        # /live and / serve the same single page: there is nothing that needs a
+        # separate window, and one page means one thing to keep working.
         if method == "GET" and route in {"/live", "/live.html"}:
-            return self._static("live.html")
+            return self._static("index.html")
         if method == "GET" and route.startswith("/static/"):
             return self._static(route[len("/static/"):])
 

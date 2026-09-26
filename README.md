@@ -372,12 +372,18 @@ panel (intent, topic, confidence, emotion, sentiment, rapport, entities), the
 retrieved KG evidence, a live-speech panel that uses the browser's speech
 recognition API when available, and the feedback/learning controls.
 
-### The live overlay (`/live`)
+### The page (`/` and `/live`)
 
-This is the screen you look at *during* an interview. Open
-`http://localhost:8420/live` — ideally in a separate window on a second monitor,
-which is the honest way to use a copilot without hiding anything from the
-interviewer.
+One self-contained page — inline CSS and JS, no external requests, no build step.
+Both URLs serve it. Type or paste the interviewer's question, press
+<kbd>Ctrl</kbd>+<kbd>Enter</kbd>, and the answer appears with its scorecard and
+latency. Optionally fill in the role and company so the answer is personalised.
+
+It uses plain `fetch()` against `POST /api/question` rather than a WebSocket,
+which means it works through any proxy or iframe. A 🎙 **Dictate** button appears
+only if the browser supports the Web Speech API, and is never required — typing
+always works. If the server is unreachable the page says so and prints the
+command to start it.
 
 ```
  ┌─ connected · tab audio · auto-answer on · 340ms to first words ─────────┐
@@ -393,25 +399,6 @@ interviewer.
  ├─ structured · 412ms · score 0.62   [↻ Regenerate] [✓ Used] [✗ Missed] ─┤
  └─────────────────────────────────────────────────────────────────────────┘
 ```
-
-What it does differently:
-
-- **Answers automatically.** The client watches the transcript, detects when a
-  question is complete (a question mark, or a question word followed by a
-  pause), and fires immediately — no "Start answering" click between the
-  question and your answer. That dead beat is the single most criticised
-  weakness of the tools this competes with.
-- **Streams the answer word by word**, so you can start reading the first
-  sentence while the rest is still being written. Time-to-first-words is shown
-  in the status bar.
-- **Listens to the meeting, not the room.** `🎧 Audio source → Tab / screen
-  audio` captures the interviewer's voice straight out of Zoom, Meet or Teams
-  via `getDisplayMedia`, which is far more accurate than a microphone in a
-  noisy room. The browser asks you to pick a tab and tick *"Share tab audio"*.
-- **Recovers from anything.** No speech API? Type the question. No model key?
-  The offline composer still answers. Socket drops? It reconnects.
-- **Keyboard first.** `Space` regenerate · `A` used it · `R` missed ·
-  `Esc` clear · `T` type — you never need the mouse mid-answer.
 
 ### Deployment
 
