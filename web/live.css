@@ -1,0 +1,188 @@
+/* InterviewGenie — Live overlay styling.
+ *
+ * Built for reading at a glance while talking: high contrast, large type, and
+ * nothing decorative competing with the answer.
+ */
+
+:root {
+  --bg: #0b0d12;
+  --panel: #14171f;
+  --panel-2: #1b1f29;
+  --line: #262b38;
+  --text: #e8ecf4;
+  --dim: #8b93a7;
+  --accent: #5b8cff;
+  --good: #35c37d;
+  --warn: #e8b339;
+  --bad: #e5544b;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── status bar ──────────────────────────────────────────────────────── */
+#bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.spacer { flex: 1; }
+
+.pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--dim);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.pill-on   { color: var(--good); border-color: #23492f; background: #10251a; }
+.pill-off  { color: var(--bad);  border-color: #4a2320; background: #251110; }
+.pill-warn { color: var(--warn); border-color: #4a3a15; background: #251d0d; }
+
+.tbtn {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.tbtn:hover { background: #232936; border-color: #374056; }
+
+/* ── interviewer transcript ──────────────────────────────────────────── */
+#heard {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 12px;
+  max-height: 26vh;
+  overflow: auto;
+}
+
+.hlabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 3px;
+}
+
+.transcript { font-size: 13.5px; color: #c3cadb; }
+.transcript .line { padding: 1px 0; }
+.transcript .dim { color: var(--dim); }
+
+/* ── the answer ──────────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 20px;
+  background: var(--bg);
+}
+
+.answer {
+  font-size: 21px;
+  line-height: 1.55;
+  font-weight: 450;
+  letter-spacing: -.005em;
+  max-width: 62ch;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.answer .dim, .dim { color: var(--dim); font-weight: 400; }
+
+/* ── footer ──────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  padding: 8px 12px;
+}
+
+.meta {
+  font-size: 11.5px;
+  color: var(--dim);
+  min-height: 16px;
+  margin-bottom: 7px;
+  letter-spacing: .01em;
+}
+
+.controls { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.cbtn {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.cbtn:hover { background: #232936; }
+.cbtn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cbtn-primary:hover { background: #4a7ef0; }
+.cbtn-good { color: var(--good); }
+.cbtn-bad  { color: var(--bad); }
+
+/* ── dialogs ─────────────────────────────────────────────────────────── */
+dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  padding: 18px;
+  max-width: 520px;
+  width: calc(100vw - 40px);
+}
+dialog::backdrop { background: rgba(4, 6, 10, .72); }
+dialog h3 { margin: 0 0 8px; font-size: 15px; }
+dialog .hint { font-size: 12.5px; color: var(--dim); margin: 0 0 14px; }
+dialog .hint strong { color: #c3cadb; }
+
+.dlgrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── small screens ───────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .answer { font-size: 18px; }
+  #heard { max-height: 22vh; }
+}

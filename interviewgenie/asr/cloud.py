@@ -17,8 +17,10 @@ from __future__ import annotations
 import base64
 import json
 import os
+import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from dataclasses import dataclass, field
@@ -367,3 +369,162 @@ class CloudASRProvider(ASRProvider):
 
                 self._fallback = LocalStreamingASR(sample_rate=self.sample_rate)
             return self._fallback.poll()
+
+
+class DeepgramStreamProvider(ASRProvider):
+    """Real-time streaming transcription over Deepgram's WebSocket API.
+
+    Unlike the batch adapters above, this one keeps a socket open for the whole
+    interview: PCM is pushed as it is captured and interim/final transcripts
+    come back continuously, which is what keeps the perceived latency low
+    enough to answer while the interviewer is still talking.
+
+    Credentials: ``DEEPGRAM_API_KEY``, or ``asr.credentials.deepgram``.
+
+    The connection is served by a daemon thread that reads frames into a queue,
+    so ``poll()`` never blocks on the network.
+    """
+
+    name = "deepgram"
+
+    def __init__(self, api_key: str = "", model: str = "nova-2",
+                 language: str = "en-US", endpointing_ms: int = 300,
+                 interim_results: bool = True, **_: Any):
+        self.api_key = api_key or os.environ.get("DEEPGRAM_API_KEY", "")
+        self.model = model
+        self.language = language
+        self.endpointing_ms = int(endpointing_ms)
+        self.interim_results = interim_results
+        self._queue: List[TranscriptChunk] = []
+        self._ws: Optional[Any] = None
+        self._thread: Optional[Any] = None
+        self._closed = False
+        self._sample_rate = 16000
+        self._sent = 0
+
+    # -- provider contract ------------------------------------------------ #
+    def capabilities(self) -> ASRCapabilities:
+        return ASRCapabilities(
+            streaming=True, partial_results=True, diarisation=False,
+            punctuation=True, word_timestamps=True,
+            languages=(self.language,), noise_robust=True)
+
+    def reset(self) -> None:
+        self._queue = []
+        self._sent = 0
+
+    def close(self) -> None:
+        self._closed = True
+        if self._ws is not None:
+            try:
+                self._ws.close()
+            except Exception:  # noqa: BLE001 - teardown must not raise
+                pass
+            self._ws = None
+        if self._thread is not None:
+            self._thread.join(timeout=2.0)
+            self._thread = None
+
+    def available(self) -> bool:
+        return bool(self.api_key)
+
+    # -- connection ------------------------------------------------------- #
+    def _connect(self, sample_rate: int) -> None:
+        if not self.api_key:
+            raise ASRError("Deepgram needs an API key (DEEPGRAM_API_KEY)",
+                           code="asr_no_credentials")
+        from .wsclient import WebSocketClient
+
+        query = urllib.parse.urlencode({
+            "model": self.model,
+            "language": self.language,
+            "encoding": "linear16",
+            "sample_rate": sample_rate,
+            "channels": 1,
+            "punctuate": "true",
+            "smart_format": "true",
+            "interim_results": "true" if self.interim_results else "false",
+            "endpointing": self.endpointing_ms,
+        })
+        url = f"wss://api.deepgram.com/v1/listen?{query}"
+        self._ws = WebSocketClient(
+            url, headers={"Authorization": f"Token {self.api_key}"},
+            timeout=30.0)
+        self._closed = False
+        self._thread = threading.Thread(target=self._reader, daemon=True)
+        self._thread.start()
+
+    def _reader(self) -> None:
+        """Pull frames off the socket until it closes or the turn ends."""
+        ws = self._ws
+        if ws is None:
+            return
+        while not self._closed:
+            message = ws.recv_json()
+            if message is None:
+                break
+            kind = message.get("type")
+            if kind == "Results":
+                self._on_results(message)
+            elif kind == "Error":
+                LOG.warning("Deepgram error: %s", message.get("description"))
+                break
+            elif kind == "Metadata":
+                LOG.debug("Deepgram metadata: %s", message.get("request_id"))
+
+    def _on_results(self, message: Dict[str, Any]) -> None:
+        try:
+            alternatives = message["channel"]["alternatives"]
+        except (KeyError, TypeError, IndexError):
+            return
+        if not alternatives:
+            return
+        best = alternatives[0]
+        text = (best.get("transcript") or "").strip()
+        if not text:
+            return
+        confidence = float(best.get("confidence") or 0.0)
+        is_final = bool(message.get("is_final"))
+        speech_final = bool(message.get("speech_final"))
+        self._queue.append(self._chunk(
+            text, is_final=is_final or speech_final, confidence=confidence,
+            start=float(message.get("start", 0.0)), end=float(message.get("end", 0.0)),
+        ))
+
+    # -- audio ------------------------------------------------------------ #
+    def accept_audio(self, samples: Sequence[float], sample_rate: int = 16000) -> None:
+        if self._ws is None or self._ws.closed:
+            if self._closed:
+                return
+            self._connect(sample_rate)
+            self._sample_rate = sample_rate
+        pcm = int16_from_floats(list(samples))
+        if not pcm:
+            return
+        try:
+            self._ws.send_binary(pcm)
+            self._sent += len(pcm)
+        except Exception as exc:  # noqa: BLE001 - a dead socket ends the stream
+            LOG.warning("Deepgram send failed: %s", exc)
+            self._closed = True
+
+    def flush(self) -> None:
+        """Ask Deepgram to endpoint whatever is buffered.
+
+        Deepgram finalises on silence or on the ``endpointing`` timer, so the
+        graceful thing to do is to send ``Finalize`` and wait briefly for the
+        result rather than tearing the socket down.
+        """
+        if self._ws is None or self._ws.closed:
+            return
+        try:
+            self._ws.send_text(json.dumps({"type": "Finalize"}))
+            deadline = time.time() + 0.5
+            while time.time() < deadline and not self._queue:
+                time.sleep(0.05)
+        except Exception as exc:  # noqa: BLE001
+            LOG.debug("Deepgram finalize failed: %s", exc)
+
+    def poll(self) -> List[TranscriptChunk]:
+        out, self._queue = self._queue, []
+        return out

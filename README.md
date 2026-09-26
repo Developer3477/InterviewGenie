@@ -13,7 +13,7 @@ python3 -m interviewgenie demo          # scripted end-to-end demonstration
 python3 -m interviewgenie ask "How would you design a URL shortener?"
 python3 -m interviewgenie serve         # live cockpit at http://localhost:8420
 python3 -m interviewgenie benchmark     # evaluation metrics
-python3 -m unittest discover -s tests -t .   # 211 tests
+python3 -m unittest discover -s tests -t .   # 289 tests
 ```
 
 Log verbosity comes from the first of these that is set: the `--log-level` flag,
@@ -372,6 +372,64 @@ panel (intent, topic, confidence, emotion, sentiment, rapport, entities), the
 retrieved KG evidence, a live-speech panel that uses the browser's speech
 recognition API when available, and the feedback/learning controls.
 
+### The live overlay (`/live`)
+
+This is the screen you look at *during* an interview. Open
+`http://localhost:8420/live` — ideally in a separate window on a second monitor,
+which is the honest way to use a copilot without hiding anything from the
+interviewer.
+
+```
+ ┌─ connected · tab audio · auto-answer on · 340ms to first words ─────────┐
+ │ interviewer                                                             │
+ │ "tell me about a time you had to push back on a deadline…"              │
+ ├─────────────────────────────────────────────────────────────────────────┤
+ │                                                                         │
+ │  I owned the orders migration. The deadline was fixed by a partner      │
+ │  launch, so I cut scope to the read path first and shipped that, then   │
+ │  landed the write path a week later. The launch went out on time and    │
+ │  we had no rollback.                                                    │
+ │                                                                         │
+ ├─ structured · 412ms · score 0.62   [↻ Regenerate] [✓ Used] [✗ Missed] ─┤
+ └─────────────────────────────────────────────────────────────────────────┘
+```
+
+What it does differently:
+
+- **Answers automatically.** The client watches the transcript, detects when a
+  question is complete (a question mark, or a question word followed by a
+  pause), and fires immediately — no "Start answering" click between the
+  question and your answer. That dead beat is the single most criticised
+  weakness of the tools this competes with.
+- **Streams the answer word by word**, so you can start reading the first
+  sentence while the rest is still being written. Time-to-first-words is shown
+  in the status bar.
+- **Listens to the meeting, not the room.** `🎧 Audio source → Tab / screen
+  audio` captures the interviewer's voice straight out of Zoom, Meet or Teams
+  via `getDisplayMedia`, which is far more accurate than a microphone in a
+  noisy room. The browser asks you to pick a tab and tick *"Share tab audio"*.
+- **Recovers from anything.** No speech API? Type the question. No model key?
+  The offline composer still answers. Socket drops? It reconnects.
+- **Keyboard first.** `Space` regenerate · `A` used it · `R` missed ·
+  `Esc` clear · `T` type — you never need the mouse mid-answer.
+
+### Deployment
+
+```bash
+cp .env.example .env        # add one LLM key and, optionally, a STT key
+docker compose up --build   # http://localhost:8420
+```
+
+There is no build step and no dependency to install: the image is
+`python:3.11-slim` plus this repository. Configuration is entirely
+environment-variable driven (`INTERVIEWGENIE_` prefix, `__` for nesting), so
+the same image runs in dev and production. See `.env.example` for every knob.
+
+```bash
+# or without Docker
+python3 -m interviewgenie serve --host 0.0.0.0 --port 8420
+```
+
 ---
 
 ## Extending with optional accelerators
@@ -381,7 +439,8 @@ recognition API when available, and the feedback/learning controls.
 | spaCy / NLTK tagging | `pip install spacy` then `nlp.tagger_backend = "spacy"` | built-in Brill-lite tagger |
 | Vosk offline ASR | `pip install vosk`, set `asr.model_path` | MFCC + DTW template decoder |
 | Google / Azure / IBM STT | `asr.provider = "google"` + credentials | local engine (automatic) |
-| LLM generation | `generation.backend = "llm"` + `generation.llm.api_key` | retrieval-augmented composer |
+| LLM generation | `generation.backend = "auto"` (default) + any `*_API_KEY` | retrieval-augmented composer |
+| Deepgram streaming STT | `DEEPGRAM_API_KEY` + `asr.provider = "deepgram"` | browser speech API, then local engine |
 | GraphDB / Neptune | `knowledge.backend = "graphdb"` + `knowledge.endpoint` | in-memory property graph |
 
 Accelerators are probed with `importlib` and `try/except`, so a missing package

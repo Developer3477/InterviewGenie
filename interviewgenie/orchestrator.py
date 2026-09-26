@@ -27,7 +27,8 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import (Any, Callable, Dict, Iterable, Iterator, List, Optional,
+                    Sequence, Tuple)
 
 from .asr.base import ASRProvider
 from .context.dialogue import DialogueManager, STRATEGIES
@@ -162,6 +163,25 @@ class InterviewGenie:
         LOG.info("interview session started", context=summary)
         return summary
 
+    def update_profile(self, **facts: Any) -> Dict[str, Any]:
+        """Refine the candidate profile during a session.
+
+        Facts already known are merged, never blanked, so a caller can top up
+        one field without wiping the rest.  Returns a short summary of what the
+        profile now says.
+        """
+        self.profile.update_facts(**facts)
+        summary = {
+            "name": self.profile.name,
+            "role": self.profile.target_role,
+            "company": self.profile.target_company,
+            "skills": list(self.profile.skills),
+            "seniority": self.profile.seniority,
+            "years_experience": self.profile.years_experience,
+        }
+        self.bus.publish("profile.updated", summary)
+        return summary
+
     def stop(self) -> Dict[str, Any]:
         """Post-interview teardown and reporting."""
         self.phase = Phase.CLOSING
@@ -210,29 +230,116 @@ class InterviewGenie:
     # -- core ------------------------------------------------------------- #
     def answer(self, turn: Turn) -> Response:
         """Analyse, retrieve, plan, generate, validate and score one question."""
-        started = time.perf_counter()
-        self.phase = Phase.ANALYSING
+        events = list(self.answer_stream(turn))
+        final = events[-1]
+        if final["type"] != "response":
+            # a recovery path already produced the response
+            return final["response"]
+        return final["response"]
 
-        # 1. analysis ----------------------------------------------------- #
+    def ask_stream(self, question: str, confidence: float = 1.0) -> Iterator[Dict[str, Any]]:
+        """Streaming text-in path: yields ``analysis``, ``delta`` and ``response``."""
+        turn = Turn(speaker=Speaker.INTERVIEWER, text=question, confidence=confidence)
+        return self.answer_stream(turn)
+
+    def answer_stream(self, turn: Turn) -> Iterator[Dict[str, Any]]:
+        """One full turn, streamed.
+
+        Yields, in order:
+
+        ``{"type": "analysis", ...}``   intent, topic, tone, entities, evidence
+        ``{"type": "delta", "text": …}`` one answer fragment at a time
+        ``{"type": "response", ...}``    the finished, validated, scored response
+
+        The blocking :meth:`answer` is a thin wrapper over this, so there is
+        exactly one turn implementation to keep correct.
+        """
+        started = time.perf_counter()
+
+        # 1-3. analysis, retrieval, dialogue state ------------------------ #
+        prepared = self._prepare_turn(turn, started)
+        if prepared is None:
+            # _prepare_turn already ran recovery and published the response
+            yield {"type": "response", "response": self._last_recovered}
+            return
+        analysis, retrieval, strategy = prepared
+
+        yield {
+            "type": "analysis",
+            "turn_id": turn.id,
+            "question": turn.text,
+            "intent": analysis.intent.name,
+            "topic": analysis.intent.topic,
+            "wh_type": analysis.intent.wh_type,
+            "confidence": analysis.intent.confidence,
+            "tone": self.emotional.emotion.dominant(),
+            "emotion": self.emotional.emotion.to_dict()
+            if hasattr(self.emotional.emotion, "to_dict") else {},
+            "entities": [str(n.get("name", n.id)) for n in retrieval.entities],
+            "evidence": [e.to_dict() for e in retrieval.evidence],
+            "strategy": strategy,
+            "latency_ms": (time.perf_counter() - started) * 1000.0,
+        }
+
+        # 4. generation (streamed) ---------------------------------------- #
+        self.phase = Phase.GENERATING
+        plan = self._start_generation(turn, analysis, retrieval, strategy)
+        if plan is None or plan.response is None:
+            response = self._recover(
+                InterviewGenieError("generation produced nothing",
+                                    code=ErrorCode.GEN_NO_PLAN),
+                turn, started)
+            yield {"type": "response", "response": response}
+            return
+
+        shell, tokens, used_llm = plan.response, plan.tokens, plan.used_llm
+        pieces: List[str] = []
+        try:
+            for piece in tokens:
+                if not piece:
+                    continue
+                pieces.append(piece)
+                yield {"type": "delta", "text": piece, "turn_id": turn.id}
+        except InterviewGenieError as exc:
+            # the model died mid-stream: fall back to the grounded composer
+            LOG.warning("LLM stream failed, using the composer: %s", exc)
+            pieces = []
+
+        streamed = "".join(pieces).strip()
+        if used_llm and len(streamed.split()) >= 6:
+            shell.text = streamed
+            shell.validation = {**shell.validation, "backend": "llm",
+                                "streamed": True}
+        # else: keep the composer's grounded text
+
+        # 5-7. validation, scoring, memory -------------------------------- #
+        response = self._finalise_turn(turn, analysis, retrieval, strategy,
+                                       shell, started)
+        yield {"type": "response", "response": response}
+
+    def _prepare_turn(self, turn: Turn, started: float
+                      ) -> Optional[Tuple[Any, Any, str]]:
+        """Analysis + retrieval + dialogue state, or ``None`` if recovered."""
+        self.phase = Phase.ANALYSING
         try:
             analysis = self.nlp.analyze(turn.text)
         except InterviewGenieError as exc:
-            return self._recover(exc, turn, started)
+            self._last_recovered = self._recover(exc, turn, started)
+            return None
         turn.analysis = analysis
         turn.dialogue_act = "question"
 
-        # 2. retrieval ---------------------------------------------------- #
         self.phase = Phase.RETRIEVING
         try:
             retrieval = self.retriever.retrieve(analysis)
         except InterviewGenieError as exc:
-            return self._recover(exc, turn, started)
+            self._last_recovered = self._recover(exc, turn, started)
+            return None
         self.bus.publish("knowledge.retrieved", {
             "entities": [str(n.get("name", n.id)) for n in retrieval.entities],
             "evidence": len(retrieval.evidence),
         })
 
-        # 3. dialogue state ------------------------------------------------ #
         self.phase = Phase.DIALOGUE
         try:
             events = self.dialogue.observe(turn)
@@ -240,27 +347,20 @@ class InterviewGenie:
         except InterviewGenieError as exc:
             # a contradiction or topic shift is recoverable: keep going
             self.recovery.execute(self.recovery.plan_for(exc))
-            events = {}
 
-        strategy = self.dialogue.choose_strategy(analysis)
-        turn.strategy = strategy
+        return analysis, retrieval, self.dialogue.choose_strategy(analysis)
 
-        # 4. generation --------------------------------------------------- #
-        self.phase = Phase.GENERATING
-        response = self._generate(turn, analysis, retrieval, strategy)
-        if response is None:
-            return self._recover(InterviewGenieError("generation produced nothing",
-                                                     code=ErrorCode.GEN_NO_PLAN),
-                                 turn, started)
-
-        # 5. validation and repair ---------------------------------------- #
+    def _finalise_turn(self, turn: Turn, analysis: Any, retrieval: Any,
+                       strategy: str, response: Response, started: float) -> Response:
+        """Validate, repair, score, remember and publish one finished answer."""
+        # 5. validation and repair
         validation = self.validator.validate(response, history=self._answer_history())
         if not validation["ok"]:
             response = self.validator.repair(response, validation["issues"])
             validation = self.validator.validate(response, history=self._answer_history())
         response.validation = {**response.validation, "validator": validation}
 
-        # 6. scoring ------------------------------------------------------ #
+        # 6. scoring
         self.phase = Phase.EVALUATING
         from .evaluation.metrics import get_evaluator
 
@@ -268,7 +368,7 @@ class InterviewGenie:
         response.scorecard = scorecard
         self.metrics.record(scorecard)
 
-        # 7. memory + learning -------------------------------------------- #
+        # 7. memory + learning
         # the response must be attached before the memory observes the turn,
         # otherwise there is nothing worth remembering yet
         self.dialogue.record_answer(turn, response)
@@ -277,6 +377,7 @@ class InterviewGenie:
         self._response_count += 1
         self.phase = Phase.LISTENING
 
+        response.strategy = strategy
         response.latency_ms = (time.perf_counter() - started) * 1000.0
         response.turn_id = turn.id
         self.bus.publish("response.generated", {
@@ -286,9 +387,33 @@ class InterviewGenie:
         })
         return response
 
-    def _generate(self, turn: Turn, analysis: Analysis, retrieval: Any,
-                  strategy: str) -> Optional[Response]:
-        """Compose (or delegate to the LLM) and post-process the answer."""
+    # -- generation ------------------------------------------------------- #
+    @dataclass
+    class _GenerationPlan:
+        response: Any
+        tokens: Any
+        used_llm: bool
+
+    def _llm_enabled(self) -> bool:
+        """True when the LLM should be preferred over the composer.
+
+        ``auto`` (the default) uses the model whenever one has credentials and
+        silently falls back to the composer otherwise; ``composer`` forces the
+        offline path; ``llm`` requires a model.
+        """
+        backend = str(self.config.get("generation.backend", "auto")).lower()
+        if backend == "composer":
+            return False
+        return bool(getattr(self.llm, "available", lambda: False)())
+
+    def _start_generation(self, turn: Turn, analysis: Any, retrieval: Any,
+                          strategy: str) -> Optional["InterviewGenie._GenerationPlan"]:
+        """Build the grounded composer answer, then upgrade it to the LLM.
+
+        Returns ``(response_shell, token_iterator, used_llm)``.  The shell always
+        carries a usable composer answer, so a model failure degrades to it
+        instead of leaving the candidate with nothing.
+        """
         memory = self.memory.context_for(turn.text, k=2)
         try:
             response = self.composer.compose(
@@ -297,29 +422,39 @@ class InterviewGenie:
         except InterviewGenieError:
             raise
         except Exception as exc:  # noqa: BLE001 - composer must never crash a turn
-            LOG.warning("composer failed, retrying with defaults: %s", exc)
-            response = None
-
-        if response is None:
+            LOG.warning("composer failed: %s", exc)
             return None
 
-        # optional LLM upgrade, with the grounded composer as fallback
-        use_llm = (str(self.config.get("generation.backend", "composer")).lower() == "llm"
-                   and getattr(self.llm, "available", lambda: False)())
-        if use_llm:
-            try:
-                prompt = self._build_llm_prompt(turn, analysis, retrieval, strategy)
-                text = self.llm.complete(
-                    prompt,
-                    system=self._llm_system_prompt(strategy),
-                    max_tokens=int(self.config.get("generation.max_words", 90)) * 2)
-                if text and len(text.split()) >= 6:
-                    response.text = text
-                    response.validation = {**response.validation, "backend": "llm"}
-            except InterviewGenieError as exc:
-                LOG.warning("LLM unavailable, using the composer: %s", exc)
-        response.strategy = strategy
-        return response
+        if not self._llm_enabled():
+            return self._GenerationPlan(response, iter([response.text]), False)
+
+        prompt = self._build_llm_prompt(turn, analysis, retrieval, strategy, memory)
+        system = self._llm_system_prompt(strategy)
+        max_tokens = int(self.config.get("generation.max_words", 90)) * 2
+        try:
+            tokens = self.llm.stream(prompt, system=system, max_tokens=max_tokens)
+        except InterviewGenieError as exc:
+            LOG.warning("LLM unavailable, using the composer: %s", exc)
+            return self._GenerationPlan(response, iter([response.text]), False)
+        return self._GenerationPlan(response, tokens, True)
+
+    def _generate(self, turn: Turn, analysis: Any, retrieval: Any,
+                  strategy: str) -> Optional[Response]:
+        """Blocking generation, kept for callers that want a finished Response."""
+        plan = self._start_generation(turn, analysis, retrieval, strategy)
+        if plan is None or plan.response is None:
+            return None
+        shell, tokens, used_llm = plan.response, plan.tokens, plan.used_llm
+        try:
+            streamed = "".join(t for t in tokens if t).strip()
+        except InterviewGenieError as exc:
+            LOG.warning("LLM unavailable, using the composer: %s", exc)
+            streamed = ""
+        if used_llm and len(streamed.split()) >= 6:
+            shell.text = streamed
+            shell.validation = {**shell.validation, "backend": "llm"}
+        shell.strategy = strategy
+        return shell
 
     def _llm_system_prompt(self, strategy: str) -> str:
         from .generation.llm import SYSTEM_PROMPT
@@ -330,26 +465,59 @@ class InterviewGenie:
             tone=self.emotional.emotion.dominant(),
         ) + f"\nResponse strategy: {strategy}."
 
-    def _build_llm_prompt(self, turn: Turn, analysis: Analysis,
-                          retrieval: Any, strategy: str) -> str:
+    def _build_llm_prompt(self, turn: Turn, analysis: Any, retrieval: Any,
+                          strategy: str,
+                          memory: Optional[Sequence[Dict[str, Any]]] = None) -> str:
+        """Assemble the retrieval-augmented prompt.
+
+        Everything that changes the answer is here: the question, what the
+        candidate said before, the job description they are interviewing for,
+        the candidate's own facts and stories, and the knowledge-graph evidence.
+        """
         lines = [
             f"Question: {turn.text}",
             f"Intent: {analysis.intent.name} / topic: {analysis.intent.topic}",
             f"Register: {self.style.register()}",
             f"Emotion detected: {self.emotional.emotion.dominant()}",
         ]
+
+        if self.profile.target_role:
+            lines.append(f"Role being interviewed for: {self.profile.target_role}")
+        if self.profile.target_company:
+            lines.append(f"Company: {self.profile.target_company}")
+        if self.profile.seniority:
+            lines.append(f"Seniority: {self.profile.seniority}")
+        if self.profile.years_experience:
+            lines.append(f"Years of experience: {self.profile.years_experience}")
+
+        if self.profile.job_description:
+            jd = " ".join(self.profile.job_description.split())
+            lines.append(f"Job description (excerpt): {jd[:1200]}")
+
+        if memory:
+            # ConversationMemory hands back human-readable snippets as strings
+            recent = [m for m in memory if isinstance(m, str) and m.strip()]
+            if recent:
+                lines.append("Earlier in this interview: "
+                             + " | ".join(recent[:3])[:600])
+
         if retrieval.entities:
-            names = ", ".join(str(n.get("name", n.id)) for n in retrieval.entities[:5])
+            names = ", ".join(str(n.get("name", n.id)) for n in retrieval.entities[:6])
             lines.append(f"Relevant knowledge entities: {names}")
-        for evidence in retrieval.evidence[:4]:
+        for evidence in retrieval.evidence[:5]:
             lines.append(f"Evidence: {evidence.text}")
+
         if self.profile.strengths:
             lines.append(f"Candidate strengths: {', '.join(self.profile.strengths[:4])}")
         if self.profile.skills:
-            lines.append(f"Candidate skills: {', '.join(self.profile.skills[:6])}")
+            lines.append(f"Candidate skills: {', '.join(self.profile.skills[:8])}")
+        if self.profile.constraints:
+            lines.append(f"Candidate background: {', '.join(self.profile.constraints[:3])}")
+
         story = self.composer._story_sentence(analysis)
         if story:
             lines.append(f"Candidate story: {story}")
+
         lines.append(f"Strategy: {strategy}")
         lines.append("Draft the answer the candidate should give.")
         return "\n".join(lines)

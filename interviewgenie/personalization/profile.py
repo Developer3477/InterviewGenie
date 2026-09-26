@@ -74,6 +74,12 @@ class IntervieweeProfile:
     skills: List[str] = field(default_factory=list)
     goals: List[str] = field(default_factory=list)
     constraints: List[str] = field(default_factory=list)
+    #: Free-text context the candidate supplies before the interview: the job
+    #: description they are interviewing for and/or their résumé.  Both are fed
+    #: into the generation prompt so answers reference the real role and the
+    #: candidate's real experience rather than generic filler.
+    job_description: str = ""
+    resume_text: str = ""
     style: Dict[str, float] = field(
         default_factory=lambda: {k: v[0] for k, v in STYLE_DIMENSIONS.items()})
     topic_affinity: Dict[str, float] = field(default_factory=dict)
@@ -91,9 +97,14 @@ class IntervieweeProfile:
             if isinstance(value, list):
                 current = getattr(self, key, None)
                 if isinstance(current, list):
+                    # case-insensitive merge: "Kafka" and "kafka" are one skill,
+                    # and a duplicated list makes the prompt look sloppy
+                    seen = {str(existing).strip().lower() for existing in current}
                     for item in value:
-                        if item not in current:
+                        marker = str(item).strip().lower()
+                        if marker and marker not in seen:
                             current.append(item)
+                            seen.add(marker)
                     continue
             setattr(self, key, value)
 
@@ -196,7 +207,10 @@ class IntervieweeProfile:
             "years_experience": self.years_experience,
             "strengths": self.strengths, "weaknesses": self.weaknesses,
             "story_bank": self.story_bank, "skills": self.skills, "goals": self.goals,
-            "constraints": self.constraints, "style": self.style,
+            "constraints": self.constraints,
+            "job_description": self.job_description,
+            "resume_text": self.resume_text,
+            "style": self.style,
             "topic_affinity": self.topic_affinity,
             "evidence_weights": self.evidence_weights,
             "interactions": self.interactions,
@@ -208,7 +222,9 @@ class IntervieweeProfile:
         profile.update_facts(**{k: v for k, v in data.items()
                                 if k in {"name", "target_role", "target_company",
                                          "seniority", "years_experience", "strengths",
-                                         "weaknesses", "skills", "goals", "constraints"}})
+                                         "weaknesses", "skills", "goals",
+                                         "constraints", "job_description",
+                                         "resume_text"}})
         profile.story_bank = list(data.get("story_bank", []))
         profile.style = {**profile.style, **data.get("style", {})}
         profile.topic_affinity = dict(data.get("topic_affinity", {}))

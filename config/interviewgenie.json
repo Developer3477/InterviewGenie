@@ -47,7 +47,7 @@
     "topic_decay": 0.85
   },
   "generation": {
-    "backend": "composer",
+    "backend": "auto",
     "max_words": 90,
     "min_words": 12,
     "llm": {
@@ -56,7 +56,8 @@
       "endpoint": "",
       "api_key": "",
       "temperature": 0.4,
-      "max_tokens": 220
+      "max_tokens": 220,
+      "timeout": 30.0
     }
   },
   "personalization": {
@@ -73,14 +74,21 @@
       "accuracy": 0.25,
       "relevance": 0.25,
       "engagement": 0.15,
-      "personalization": 0.10,
+      "personalization": 0.1,
       "groundedness": 0.15,
-      "fluency": 0.10
+      "fluency": 0.1
     }
   },
   "api": {
     "host": "0.0.0.0",
     "port": 8420,
     "web_root": "web"
+  },
+  "live": {
+    "auto_answer": true,
+    "min_question_words": 3,
+    "min_confidence": 0.55,
+    "debounce_ms": 350,
+    "capture": "mic"
   }
 }

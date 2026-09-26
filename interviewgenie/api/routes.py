@@ -169,6 +169,8 @@ class Router:
         # static + cockpit
         if method == "GET" and route in {"/", "/index.html"}:
             return self._static("index.html")
+        if method == "GET" and route in {"/live", "/live.html"}:
+            return self._static("live.html")
         if method == "GET" and route.startswith("/static/"):
             return self._static(route[len("/static/"):])
 
@@ -187,6 +189,23 @@ class Router:
                 return json_response(self.store.default().to_dict())
             if method == "DELETE":
                 return self._stop_session()
+        if method == "PUT" and route == "/api/profile":
+            genie = self.store.default().genie
+            return json_response(genie.update_profile(**(payload.get("profile") or {})))
+        if method == "GET" and route == "/api/profile":
+            genie = self.store.default().genie
+            return json_response({
+                "name": genie.profile.name,
+                "target_role": genie.profile.target_role,
+                "target_company": genie.profile.target_company,
+                "seniority": genie.profile.seniority,
+                "years_experience": genie.profile.years_experience,
+                "skills": list(genie.profile.skills),
+                "strengths": list(genie.profile.strengths),
+                "stories": len(genie.profile.story_bank),
+                "has_job_description": bool(genie.profile.job_description),
+                "has_resume": bool(genie.profile.resume_text),
+            })
         if method == "POST" and route == "/api/question":
             return self._question(payload)
         if method == "POST" and route == "/api/feedback":
@@ -320,6 +339,36 @@ async def websocket_handler(connection: Any, router: Router) -> None:
         await connection.close()
 
 
+async def _stream_answer(connection: Any, session: Session, genie: Any,
+                         text: str, confidence: float) -> Any:
+    """Drive one streamed turn and yield the frames to send.
+
+    Kept as an async generator so the socket is written to incrementally: the
+    candidate sees the first words of the answer while the rest is still being
+    generated, which is the whole point during a live interview.
+    """
+    async for event in _aiter(genie.ask_stream(text, confidence=confidence)):
+        kind = event.get("type")
+        if kind == "analysis":
+            yield {"type": "analysis", "session": session.to_dict(),
+                   **{k: v for k, v in event.items() if k != "type"}}
+        elif kind == "delta":
+            yield {"type": "delta", "turn_id": event.get("turn_id"),
+                   "text": event.get("text", "")}
+        elif kind == "response":
+            response = event["response"]
+            session.turn_count += 1
+            session.last_response = response.to_dict()
+            yield {"type": "response", "session": session.to_dict(),
+                   **response.to_dict()}
+
+
+async def _aiter(sync_iterator: Any) -> Any:
+    """Adapt a synchronous generator to ``async for`` without blocking the loop."""
+    for item in sync_iterator:
+        yield item
+
+
 async def _handle_ws_message(connection: Any, session: Session, router: Router,
                              message: ClientMessage) -> None:
     kind = message.type
@@ -342,12 +391,12 @@ async def _handle_ws_message(connection: Any, session: Session, router: Router,
         if not session.started:
             genie.start()
             session.started = True
-        await _emit_analysis(connection, genie, text)
-        response = genie.ask(text, confidence=float(message.get("confidence", 1.0)))
-        session.turn_count += 1
-        session.last_response = response.to_dict()
-        await connection.send_text(encode({
-            "type": "response", "session": session.to_dict(), **response.to_dict()}))
+        # Streamed: analysis first, then answer fragments as the model produces
+        # them, then the finished response.  Doing it in one pass means the
+        # question is analysed exactly once.
+        async for event in _stream_answer(connection, session, genie, text,
+                                          float(message.get("confidence", 1.0))):
+            await connection.send_text(encode(event))
         return
     if kind == "audio":
         data = message.get("data", "")

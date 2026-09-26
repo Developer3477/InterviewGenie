@@ -103,7 +103,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "track_tone": True,
     },
     "generation": {
-        "backend": "composer",           # composer | llm
+        "backend": "auto",               # auto | composer | llm
         "llm": {
             "provider": "openai",
             "model": "gpt-4o-mini",
@@ -245,7 +245,7 @@ class Config:
                 recoverable=False,
             )
         gen = self.data.get("generation", {})
-        if gen.get("backend") not in {"composer", "llm"}:
+        if gen.get("backend") not in {"auto", "composer", "llm"}:
             raise InterviewGenieError(
                 f"unknown generation backend {gen.get('backend')!r}",
                 code=ErrorCode.CONFIG_INVALID,

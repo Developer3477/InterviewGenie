@@ -1,0 +1,47 @@
+# InterviewGenie — one-command deployment.
+#
+#   docker compose up --build
+#
+# Then open http://localhost:8420 for the workbench, or http://localhost:8420/live
+# for the interview overlay.
+#
+# Put your keys in a .env file next to this file (copy .env.example); Compose
+# picks them up automatically.
+
+services:
+  interviewgenie:
+    build: .
+    image: interviewgenie:latest
+    container_name: interviewgenie
+    restart: unless-stopped
+    ports:
+      - "8420:8420"
+    environment:
+      # Everything here can also live in .env — these are the sane defaults.
+      INTERVIEWGENIE_HOST: 0.0.0.0
+      INTERVIEWGENIE_PORT: 8420
+      INTERVIEWGENIE_LOG_LEVEL: ${INTERVIEWGENIE_LOG_LEVEL:-INFO}
+      INTERVIEWGENIE_GENERATION__BACKEND: ${INTERVIEWGENIE_GENERATION__BACKEND:-auto}
+      INTERVIEWGENIE_GENERATION__LLM__PROVIDER: ${INTERVIEWGENIE_GENERATION__LLM__PROVIDER:-openai}
+      INTERVIEWGENIE_GENERATION__LLM__MODEL: ${INTERVIEWGENIE_GENERATION__LLM__MODEL:-gpt-4o-mini}
+
+      # Model keys are passed straight through; whichever one is set wins.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      XAI_API_KEY: ${XAI_API_KEY:-}
+
+      # Streaming speech-to-text (optional; the browser can transcribe for free).
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8420/api/health', timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
