@@ -60,7 +60,7 @@ class RouterTests(GenieTestCase):
         self.assertIn(b"InterviewGenie", body)
 
     def test_static_assets_are_served(self):
-        for asset in ("/static/app.js", "/static/style.css"):
+        for asset in ("/static/capture.html",):
             status, _headers, body = self._router().handle("GET", asset, "", b"")
             self.assertEqual(status, 200, msg=asset)
             self.assertTrue(body)

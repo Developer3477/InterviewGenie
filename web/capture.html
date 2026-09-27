@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InterviewGenie · audio capture</title>
+<style>
+  :root{--bg:#0b0d12;--panel:#14171f;--line:#262b38;--text:#e8ecf4;
+        --dim:#8b93a7;--accent:#5b8cff;--good:#35c37d;--bad:#e5544b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  main{max-width:560px;margin:0 auto;padding:28px 20px 40px}
+  h1{font-size:17px;margin:0 0 4px}
+  p.sub{color:var(--dim);font-size:13px;margin:0 0 22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        padding:16px;margin-bottom:14px}
+  button{font:inherit;font-size:13px;color:var(--text);background:#1b1f29;
+         border:1px solid var(--line);border-radius:8px;padding:9px 14px;
+         cursor:pointer;margin-right:8px}
+  button:hover{background:#232936}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  #log{margin-top:16px;font:12px/1.6 ui-monospace,Consolas,monospace;
+       color:var(--dim);white-space:pre-wrap;max-height:220px;overflow:auto}
+  .ok{color:var(--good)} .bad{color:var(--bad)}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;
+        border-radius:999px;background:#1b1f29;border:1px solid var(--line);
+        color:var(--dim);margin-bottom:14px}
+  .pill.ok{color:var(--good);border-color:#23492f;background:#10251a}
+  .pill.bad{color:var(--bad);border-color:#4a2320;background:#251110}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hint{font-size:12px;color:var(--dim);margin-top:8px}
+  .level{height:4px;background:#1b1f29;border-radius:2px;overflow:hidden;margin-top:10px}
+  .level>i{display:block;height:100%;width:0;background:var(--good);transition:width .08s}
+</style>
+</head>
+<body>
+<main>
+  <h1>InterviewGenie audio</h1>
+  <p class="sub">This page is a microphone. The answers appear in the overlay
+     window — you never need to look at this.</p>
+
+  <span id="state" class="pill">not connected</span>
+
+  <div class="card">
+    <div class="row">
+      <button id="btn-display" class="primary">🖥 Tab / screen audio</button>
+      <button id="btn-mic">🎙 Microphone</button>
+      <button id="btn-stop" disabled>Stop</button>
+    </div>
+    <p class="hint">
+      <strong>Tab / screen audio</strong> captures the interviewer's voice
+      straight out of Zoom, Meet or Teams — far more accurate than a room
+      microphone. The browser will ask you to pick a tab and tick
+      <em>“Share tab audio”</em>.
+    </p>
+    <div class="level"><i id="meter"></i></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input id="typed" placeholder="Or type the question here…"
+             style="flex:1;font:inherit;color:var(--text);background:var(--bg);
+                    border:1px solid var(--line);border-radius:8px;padding:9px 10px">
+      <button id="btn-send">Answer</button>
+    </div>
+    <p class="hint">Works with no microphone permission at all.</p>
+  </div>
+
+  <div id="log"></div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var log = $("log"), state = $("state"), meter = $("meter");
+
+  function say(text, cls){
+    var line = document.createElement("div");
+    if(cls) line.className = cls;
+    line.textContent = new Date().toLocaleTimeString() + "  " + text;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+  function setState(text, cls){
+    state.textContent = text;
+    state.className = "pill" + (cls ? " " + cls : "");
+  }
+
+  var ws = null, stream = null, ctx = null, processor = null, source = null;
+  var speaking = false;
+
+  // ── socket ────────────────────────────────────────────────────────────
+  function connect(){
+    var proto = location.protocol === "https:" ? "wss://" : "ws://";
+    ws = new WebSocket(proto + location.host + "/ws");
+    ws.onopen = function(){
+      setState("connected", "ok");
+      ws.send(JSON.stringify({type:"start", profile:{}}));
+      say("connected to the engine", "ok");
+    };
+    ws.onclose = function(){
+      setState("reconnecting…", "bad");
+      setTimeout(connect, 1000);
+    };
+    ws.onerror = function(){ setState("connection error", "bad"); };
+    ws.onmessage = function(e){
+      var m = {};
+      try { m = JSON.parse(e.data); } catch(err){ return; }
+      if(m.type === "error") say("server: " + m.message, "bad");
+    };
+  }
+
+  // ── audio ─────────────────────────────────────────────────────────────
+  function stopAudio(){
+    speaking = false;
+    if(processor){ try{ processor.disconnect(); }catch(e){} processor = null; }
+    if(source){ try{ source.disconnect(); }catch(e){} source = null; }
+    if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+    if(ctx){ try{ ctx.close(); }catch(e){} ctx = null; }
+    $("btn-stop").disabled = true;
+    $("btn-mic").disabled = false;
+    $("btn-display").disabled = false;
+    meter.style.width = "0";
+  }
+
+  function startAudio(newStream, label){
+    stopAudio();
+    stream = newStream;
+    if(!stream.getAudioTracks().length){
+      say("no audio track was shared — tick “Share tab audio”", "bad");
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      return;
+    }
+    ctx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:16000});
+    source = ctx.createMediaStreamSource(stream);
+    // ScriptProcessor is deprecated but is the only zero-dependency way to
+    // pull PCM out of a MediaStream in every current browser.
+    processor = ctx.createScriptProcessor(4096, 1, 1);
+    processor.onaudioprocess = function(e){
+      if(!speaking || !ws || ws.readyState !== 1) return;
+      var input = e.inputBuffer.getChannelData(0);
+      // int16 little-endian, which is what the server's ASR expects
+      var pcm = new Int16Array(input.length);
+      var peak = 0;
+      for(var i=0;i<input.length;i++){
+        var s = Math.max(-1, Math.min(1, input[i]));
+        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+        peak = Math.max(peak, Math.abs(s));
+      }
+      meter.style.width = Math.round(peak * 100) + "%";
+      // base64 without building a huge string
+      var bytes = new Uint8Array(pcm.buffer);
+      var bin = "";
+      var CHUNK = 0x8000;
+      for(var j=0;j<bytes.length;j+=CHUNK){
+        bin += String.fromCharCode.apply(null, bytes.subarray(j, j+CHUNK));
+      }
+      ws.send(JSON.stringify({
+        type: "audio",
+        encoding: "pcm16le",
+        sample_rate: 16000,
+        data: btoa(bin)
+      }));
+    };
+    source.connect(processor);
+    processor.connect(ctx.destination);
+    speaking = true;
+    $("btn-stop").disabled = false;
+    $("btn-mic").disabled = true;
+    $("btn-display").disabled = true;
+    setState("listening · " + label, "ok");
+    say("capturing " + label, "ok");
+  }
+
+  $("btn-display").addEventListener("click", function(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+      say("this browser cannot capture tab audio — use the microphone", "bad");
+      return;
+    }
+    navigator.mediaDevices.getDisplayMedia({audio:true, video:true})
+      .then(function(s){
+        s.getVideoTracks().forEach(function(t){ t.stop(); s.removeTrack(t); });
+        startAudio(s, "tab audio");
+      })
+      .catch(function(err){ say("capture cancelled: " + err.name, "bad"); });
+  });
+
+  $("btn-mic").addEventListener("click", function(){
+    navigator.mediaDevices.getUserMedia({audio:true})
+      .then(function(s){ startAudio(s, "microphone"); })
+      .catch(function(err){ say("microphone denied: " + err.name, "bad"); });
+  });
+
+  $("btn-stop").addEventListener("click", function(){
+    stopAudio();
+    setState("stopped");
+    say("capture stopped");
+  });
+
+  // ── typed questions ───────────────────────────────────────────────────
+  function sendTyped(){
+    var text = $("typed").value.trim();
+    if(!text) return;
+    $("typed").value = "";
+    say("asked: " + text);
+    ws.send(JSON.stringify({type:"question", text:text, confidence:1.0}));
+  }
+  $("btn-send").addEventListener("click", sendTyped);
+  $("typed").addEventListener("keydown", function(e){
+    if(e.key === "Enter") sendTyped();
+  });
+
+  connect();
+  say("ready — pick an audio source, or just type the question");
+})();
+</script>
+</body>
+</html>

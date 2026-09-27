@@ -13,7 +13,7 @@ python3 -m interviewgenie demo          # scripted end-to-end demonstration
 python3 -m interviewgenie ask "How would you design a URL shortener?"
 python3 -m interviewgenie serve         # live cockpit at http://localhost:8420
 python3 -m interviewgenie benchmark     # evaluation metrics
-python3 -m unittest discover -s tests -t .   # 289 tests
+python3 -m unittest discover -s tests -t .   # 329 tests
 ```
 
 Log verbosity comes from the first of these that is set: the `--log-level` flag,
@@ -372,18 +372,65 @@ panel (intent, topic, confidence, emotion, sentiment, rapport, entities), the
 retrieved KG evidence, a live-speech panel that uses the browser's speech
 recognition API when available, and the feedback/learning controls.
 
-### The page (`/` and `/live`)
+### The desktop overlay (the product)
 
-One self-contained page — inline CSS and JS, no external requests, no build step.
-Both URLs serve it. Type or paste the interviewer's question, press
-<kbd>Ctrl</kbd>+<kbd>Enter</kbd>, and the answer appears with its scorecard and
-latency. Optionally fill in the role and company so the answer is personalised.
+```bash
+python3 -m interviewgenie desktop
+```
 
-It uses plain `fetch()` against `POST /api/question` rather than a WebSocket,
-which means it works through any proxy or iframe. A 🎙 **Dictate** button appears
-only if the browser supports the Web Speech API, and is never required — typing
-always works. If the server is unreachable the page says so and prints the
-command to start it.
+This is the thing you run during an interview. An **always-on-top, borderless
+window** sits over your meeting app and fills itself in as the interviewer
+speaks — no clicking, no switching windows, no reading a wall of text.
+
+```
+ ┌───────────────────────────────────────────┐
+ │ ⠿ InterviewGenie        listening   —  ✕  │
+ ├───────────────────────────────────────────┤
+ │ INTERVIEWER                               │
+ │ "tell me about a time you had to push     │
+ │  back on a deadline…"                     │
+ │                                           │
+ │  I owned the orders migration. The        │
+ │  deadline was fixed by a partner launch,  │
+ │  so I cut scope to the read path first    │
+ │  and shipped that, then landed the write  │
+ │  path a week later. The launch went out   │
+ │  on time and we had no rollback.          │
+ │                                           │
+ ├───────────────────────────────────────────┤
+ │ structured · people · score 0.62 · 18ms   │
+ │  ↻      ✓      ✗      ⌨      ◐      ✕     │
+ └───────────────────────────────────────────┘
+```
+
+**How it hears the interviewer.** The browser is the only cross-platform way to
+pull a voice out of Zoom, Meet or Teams, so the app opens a small *capture*
+page (`/capture`) that asks for **tab or screen audio** via `getDisplayMedia`.
+Pick the meeting tab and tick *"Share tab audio"* — that is far more accurate
+than a room microphone. The page is a microphone and nothing more: minimise it,
+put it on another monitor, ignore it. A microphone option and a text box are
+both there as fallbacks, and the text box needs no permission at all.
+
+**Why it answers at the right moment.** A recogniser emits a *stream* of
+fragments, one per phrase; answering each one would produce a stream of
+half-answers. `interviewgenie/live.py` accumulates the transcript and answers
+only when it holds a complete question *and* the interviewer has paused
+(`--debounce`, default 700 ms). That is what removes the dead beat between the
+question and your answer — the single most criticised weakness of the tools this
+competes with.
+
+**Keyboard**, so you never touch the mouse mid-answer:
+`Space` regenerate · `A` used it · `R` missed · `T` type · `Esc` clear.
+Drag the title bar to move it; `—` minimises; `✕` quits.
+
+**Requirements.** Python 3.9+ with tkinter — bundled with the standard CPython
+installer on Windows and macOS, `python3-tk` on Debian/Ubuntu,
+`python3-tkinter` on Fedora. If tkinter is missing the app says exactly that and
+suggests the fix rather than dumping a traceback. `--headless` runs the same
+pipeline with no GUI, which is what the tests use.
+
+The overlay never steals focus, so typing in the interview keeps working, and
+it makes no attempt to hide itself from a screen share — use a second monitor.
 
 ```
  ┌─ connected · tab audio · auto-answer on · 340ms to first words ─────────┐
@@ -427,6 +474,7 @@ python3 -m interviewgenie serve --host 0.0.0.0 --port 8420
 | Vosk offline ASR | `pip install vosk`, set `asr.model_path` | MFCC + DTW template decoder |
 | Google / Azure / IBM STT | `asr.provider = "google"` + credentials | local engine (automatic) |
 | LLM generation | `generation.backend = "auto"` (default) + any `*_API_KEY` | retrieval-augmented composer |
+| Deepgram streaming STT | `DEEPGRAM_API_KEY` + `asr.provider = "deepgram"` | browser tab audio, then local engine |
 | Deepgram streaming STT | `DEEPGRAM_API_KEY` + `asr.provider = "deepgram"` | browser speech API, then local engine |
 | GraphDB / Neptune | `knowledge.backend = "graphdb"` + `knowledge.endpoint` | in-memory property graph |
 

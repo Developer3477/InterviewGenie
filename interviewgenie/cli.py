@@ -95,6 +95,20 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_desktop(args: argparse.Namespace) -> int:
+    """Launch the always-on-top overlay driven by live speech."""
+    from .desktop.app import main as desktop_main
+
+    argv = ["--port", str(args.port), "--debounce", str(args.debounce)]
+    if args.no_auto:
+        argv.append("--no-auto")
+    if args.no_browser:
+        argv.append("--no-browser")
+    if args.headless:
+        argv.append("--headless")
+    return desktop_main(argv)
+
+
 def cmd_benchmark(args: argparse.Namespace) -> int:
     from .evaluation.dataset import default_cases
     from .evaluation.metrics import Benchmark
@@ -338,6 +352,19 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--host", default="0.0.0.0")
     serve.add_argument("--port", type=int, default=8420)
     serve.set_defaults(func=cmd_serve)
+
+    desktop = subparsers.add_parser(
+        "desktop", help="run the always-on-top live overlay")
+    desktop.add_argument("--port", type=int, default=8422)
+    desktop.add_argument("--no-auto", action="store_true",
+                         help="require a click before answering")
+    desktop.add_argument("--debounce", type=int, default=700,
+                         help="ms of silence that marks a question as finished")
+    desktop.add_argument("--no-browser", action="store_true",
+                         help="do not open the audio-capture page")
+    desktop.add_argument("--headless", action="store_true",
+                         help="run without the GUI (tests, servers, CI)")
+    desktop.set_defaults(func=cmd_desktop)
 
     benchmark = subparsers.add_parser("benchmark", help="run the evaluation benchmark")
     benchmark.add_argument("--limit", type=int, default=None)

@@ -167,12 +167,12 @@ class Router:
     def _dispatch(self, method: str, route: str, params: Dict[str, List[str]],
                   payload: Dict[str, Any]) -> Tuple[int, Dict[str, str], bytes]:
         # static + cockpit
-        if method == "GET" and route in {"/", "/index.html"}:
-            return self._static("index.html")
-        # /live and / serve the same single page: there is nothing that needs a
-        # separate window, and one page means one thing to keep working.
-        if method == "GET" and route in {"/live", "/live.html"}:
-            return self._static("index.html")
+        # The desktop overlay is the product; this page is its microphone.
+        # Every web entry point serves it so no URL can 404.
+        if method == "GET" and route in {"/", "/index.html", "/live",
+                                         "/live.html", "/capture",
+                                         "/capture.html"}:
+            return self._static("capture.html")
         if method == "GET" and route.startswith("/static/"):
             return self._static(route[len("/static/"):])
 
@@ -411,6 +411,21 @@ async def _handle_ws_message(connection: Any, session: Session, router: Router,
             genie.start()
             session.started = True
         for chunk in genie.ingest(samples, int(message.get("sample_rate", 16000))):
+            live = getattr(genie, "live", None)
+            if live is not None:
+                # Live mode: the session decides when a question is finished,
+                # so a fragment is never answered on its own.
+                for event in live.feed_transcript(chunk):
+                    kind = event.get("type")
+                    if kind == "partial":
+                        await connection.send_text(encode({
+                            "type": "partial", "text": event.get("text", ""),
+                            "confidence": chunk.confidence}))
+                    elif kind == "question":
+                        await connection.send_text(encode({
+                            "type": "question", "text": event.get("text", ""),
+                            "confidence": event.get("confidence", 1.0)}))
+                continue
             if chunk.is_final:
                 await _emit_analysis(connection, genie, chunk.text)
                 response = genie.handle_transcript(chunk)

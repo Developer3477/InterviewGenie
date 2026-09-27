@@ -130,6 +130,7 @@ class InterviewGenie:
         self.turns: List[Turn] = []
         self.started_at: Optional[float] = None
         self._response_count = 0
+        self.live = None
 
     def _build_asr(self) -> ASRProvider:
         from .asr.base import provider_from_config
@@ -162,6 +163,18 @@ class InterviewGenie:
         self.bus.publish("interview.started", summary)
         LOG.info("interview session started", context=summary)
         return summary
+
+    def attach_live(self, session: Any) -> None:
+        """Attach a live-interview session (see :mod:`interviewgenie.live`).
+
+        When one is attached, streaming audio is routed through it instead of
+        being answered fragment by fragment: it accumulates the transcript,
+        waits for the interviewer to pause, and only then answers. Without it,
+        every final transcript is answered immediately, which is right for the
+        text API and wrong for a live interview.
+        """
+        self.live = session
+        self.bus.publish("live.attached", {"type": type(session).__name__})
 
     def update_profile(self, **facts: Any) -> Dict[str, Any]:
         """Refine the candidate profile during a session.
